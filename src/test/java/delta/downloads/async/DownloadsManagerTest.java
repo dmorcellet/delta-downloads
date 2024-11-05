@@ -3,18 +3,19 @@ package delta.downloads.async;
 import java.io.File;
 import java.util.Date;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test class for the DownloadsManager.
  * @author DAM
  */
-public class DownloadsManagerTest extends TestCase
+public class DownloadsManagerTest
 {
   /**
    * Test a download.
    */
-  public void testDownload()
+  @Test
+  void testDownload()
   {
     DownloadsManager downloadsMgr=new DownloadsManager();
     String url="https://sourceforge.net/projects/lotrocompanion/files/1.zip/download";

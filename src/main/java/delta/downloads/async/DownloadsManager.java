@@ -11,7 +11,8 @@ import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.nio.conn.ssl.SSLIOSessionStrategy;
 import org.apache.http.ssl.SSLContexts;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Synchronous/Asynchronous downloads manager.
@@ -19,7 +20,7 @@ import org.apache.log4j.Logger;
  */
 public class DownloadsManager
 {
-  private static final Logger LOGGER=Logger.getLogger(DownloadsManager.class);
+  private static final Logger LOGGER=LoggerFactory.getLogger(DownloadsManager.class);
 
   private CloseableHttpAsyncClient _client;
   private Map<Integer,SingleAsyncDownloadManager> _tasks;

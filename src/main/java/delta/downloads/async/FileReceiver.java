@@ -3,7 +3,8 @@ package delta.downloads.async;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import delta.common.utils.files.BinaryFileWriter;
 
@@ -13,7 +14,7 @@ import delta.common.utils.files.BinaryFileWriter;
  */
 public class FileReceiver implements BytesReceiver
 {
-  private static final Logger LOGGER=Logger.getLogger(FileReceiver.class);
+  private static final Logger LOGGER=LoggerFactory.getLogger(FileReceiver.class);
 
   private File _to;
   private BinaryFileWriter _writer;

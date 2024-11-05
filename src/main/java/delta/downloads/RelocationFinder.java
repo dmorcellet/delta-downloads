@@ -3,7 +3,8 @@ package delta.downloads;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Finds relocations.
@@ -11,7 +12,7 @@ import org.apache.log4j.Logger;
  */
 public class RelocationFinder
 {
-  private static final Logger LOGGER=Logger.getLogger(RelocationFinder.class);
+  private static final Logger LOGGER=LoggerFactory.getLogger(RelocationFinder.class);
 
   /**
    * Finds relocation for the given URL, if any.

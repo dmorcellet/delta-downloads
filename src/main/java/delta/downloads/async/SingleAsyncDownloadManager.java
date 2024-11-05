@@ -18,7 +18,8 @@ import org.apache.http.nio.client.methods.AsyncByteConsumer;
 import org.apache.http.nio.client.methods.HttpAsyncMethods;
 import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
 import org.apache.http.protocol.HttpContext;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import delta.common.utils.NumericTools;
 
@@ -28,7 +29,7 @@ import delta.common.utils.NumericTools;
  */
 public class SingleAsyncDownloadManager
 {
-  private static final Logger LOGGER=Logger.getLogger(SingleAsyncDownloadManager.class);
+  private static final Logger LOGGER=LoggerFactory.getLogger(SingleAsyncDownloadManager.class);
 
   private CloseableHttpAsyncClient _client;
   private DownloadTask _task;
