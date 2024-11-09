@@ -42,7 +42,7 @@ public class FileReceiver implements BytesReceiver
     boolean ok;
     try
     {
-      _writer.getDataOutputStream().write(buffer,0,count);
+      _writer.getDataOutputStream().write(buffer,offset,count);
       ok=true;
     }
     catch (IOException ioe)
