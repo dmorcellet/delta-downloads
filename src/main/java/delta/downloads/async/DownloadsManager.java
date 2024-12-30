@@ -73,7 +73,7 @@ public class DownloadsManager
         BufferReceiver receiver=(BufferReceiver)task.getReceiver();
         return receiver.getBytes();
       }
-      LOGGER.warn("Unexpected download state: "+state);
+      LOGGER.warn("Unexpected download state: {}",state);
     }
     return null;
   }
@@ -152,13 +152,29 @@ public class DownloadsManager
     return _tasks.get(Integer.valueOf(taskID));
   }
 
-  /*
-  LATER: wait for termination of all downloads.
+  /**
+   * Wait for the termination of all downloads.
+   */
   public void waitForTermination()
   {
-    
+    // Unimplemented!
   }
-  */
+
+  /**
+   * Cancel all downloads.
+   */
+  public void cancel()
+  {
+    for(SingleAsyncDownloadManager taskMgr : _tasks.values())
+    {
+      DownloadTask task=taskMgr.getDownloadTask();
+      DownloadState state=task.getDownloadState();
+      if (state==DownloadState.RUNNING)
+      {
+        taskMgr.cancel();
+      }
+    }
+  }
 
   private CloseableHttpAsyncClient buildClient()
   {

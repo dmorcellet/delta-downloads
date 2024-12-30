@@ -2,7 +2,6 @@ package delta.downloads.async;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 
 import org.apache.http.Header;
@@ -34,7 +33,6 @@ public class SingleAsyncDownloadManager
   private CloseableHttpAsyncClient _client;
   private DownloadTask _task;
   private DownloadListener _listener;
-  private CountDownLatch _latch;
   
   /**
    * Constructor.
@@ -57,6 +55,15 @@ public class SingleAsyncDownloadManager
   }
 
   /**
+   * Get the managed download task.
+   * @return the managed download task.
+   */
+  public DownloadTask getDownloadTask()
+  {
+    return _task;
+  }
+
+  /**
    * Start download.
    * @return <code>true</code> if start was successfull, <code>false</code> otherwise.
    */
@@ -73,9 +80,9 @@ public class SingleAsyncDownloadManager
     final HttpGet get=new HttpGet(url);
     HttpAsyncRequestProducer producer=HttpAsyncMethods.create(get);
     AsyncByteConsumer<HttpResponse> consumer=buildConsumer();
-    _latch=new CountDownLatch(1);
     FutureCallback<HttpResponse> callback=buildCallback();
     _task.setDownloadState(DownloadState.RUNNING);
+    // Handle exceptions raised below?
     Future<HttpResponse> future=_client.execute(producer,consumer,callback);
     _task.setFuture(future);
     return true;
@@ -85,7 +92,7 @@ public class SingleAsyncDownloadManager
   {
     AsyncByteConsumer<HttpResponse> consumer=new AsyncByteConsumer<HttpResponse>()
     {
-      private HttpResponse responseStorage;
+      private HttpResponse _responseStorage;
 
       @Override
       protected void onByteReceived(ByteBuffer buf, IOControl ioctrl) throws IOException
@@ -96,26 +103,20 @@ public class SingleAsyncDownloadManager
       @Override
       protected HttpResponse buildResult(HttpContext context) throws Exception
       {
-        return this.responseStorage;
+        return this._responseStorage;
       }
 
       @Override
       protected void onResponseReceived(HttpResponse response) throws HttpException, IOException
       {
-        if (LOGGER.isDebugEnabled())
-        {
-          LOGGER.debug("Received response: "+response);
-        }
-        this.responseStorage=response;
+        LOGGER.debug("Received response: {}",response);
+        this._responseStorage=response;
         Header[] headers=response.getHeaders("Content-Length");
         if ((headers!=null)&&(headers.length>0))
         {
           String valueStr=headers[0].getValue();
           Integer expectedLength=NumericTools.parseInteger(valueStr);
-          if (LOGGER.isDebugEnabled())
-          {
-            LOGGER.debug("Expected length: "+expectedLength);
-          }
+          LOGGER.debug("Expected length: {}",expectedLength);
           _task.setExpectedSize(expectedLength);
           invokeListener();
         }
@@ -148,7 +149,7 @@ public class SingleAsyncDownloadManager
   {
     if (LOGGER.isDebugEnabled())
     {
-      LOGGER.debug("Received: "+buf.remaining());
+      LOGGER.debug("Received: {}", Integer.valueOf(buf.remaining()));
     }
     int bytesCount=buf.remaining();
     byte[] bytes=buf.array();
@@ -159,6 +160,10 @@ public class SingleAsyncDownloadManager
       int doneSize=_task.getDoneSize();
       doneSize+=bytesCount;
       _task.setDoneSize(doneSize);
+      if (LOGGER.isDebugEnabled())
+      {
+        LOGGER.debug("Done size: {} / {}",Integer.valueOf(doneSize),_task.getExpectedSize());
+      }
       invokeListener();
     }
     else
@@ -172,7 +177,7 @@ public class SingleAsyncDownloadManager
   {
     if (LOGGER.isDebugEnabled())
     {
-      LOGGER.debug("COMPLETED "+_task.getURL()+" => "+statusLine);
+      LOGGER.debug("COMPLETED {} => {}",_task.getURL(),statusLine);
     }
     int statusCode=statusLine.getStatusCode();
     if (statusCode==HttpStatus.SC_OK)
@@ -188,14 +193,14 @@ public class SingleAsyncDownloadManager
 
   private void handleFailure(Exception e)
   {
-    LOGGER.warn("Failure received for: "+_task);
+    LOGGER.warn("Failure received for: {} with exception {}",_task,e);
     _task.setDownloadState(DownloadState.FAILED);
     handleTermination();
   }
 
   private void handleCancellation()
   {
-    LOGGER.warn("Cancellation received for: "+_task);
+    LOGGER.warn("Cancellation received for: {}",_task);
     _task.setDownloadState(DownloadState.CANCELLED);
     handleTermination();
   }
@@ -205,8 +210,6 @@ public class SingleAsyncDownloadManager
     BytesReceiver receiver=_task.getReceiver();
     receiver.terminate();
     invokeListener();
-    LOGGER.debug("Releasing latch!");
-    _latch.countDown();
   }
 
   /**
@@ -226,19 +229,36 @@ public class SingleAsyncDownloadManager
    */
   public void waitForDownloadTermination()
   {
-    if (_latch==null)
-    {
-      LOGGER.warn("No latch!");
-      return;
-    }
     try
     {
-      _latch.await();
+      HttpResponse httpResponse=_task.getFuture().get();
+      Integer statusCode=getStatusCode(httpResponse);
+      DownloadState state=getDownloadState(statusCode);
+      _task.setDownloadState(state);
     }
     catch (Exception e)
     {
-      LOGGER.error("Caught exception in _latch.await!",e);
+      LOGGER.error("Caught exception in future.get()!",e);
     }
+  }
+
+  private Integer getStatusCode(HttpResponse httpResponse)
+  {
+    StatusLine line=httpResponse.getStatusLine();
+    if (line!=null)
+    {
+      return Integer.valueOf(line.getStatusCode());
+    }
+    return null;
+  }
+
+  private DownloadState getDownloadState(Integer statusCode)
+  {
+    if ((statusCode!=null) && (statusCode.intValue()==HttpStatus.SC_OK))
+    {
+      return DownloadState.OK;
+    }
+    return DownloadState.FAILED;
   }
 
   private void invokeListener()
