@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>delta-downloads</artifactId>
   <packaging>jar</packaging>
-  <version>3.2-SNAPSHOT</version>
+  <version>3.2</version>
   <name>downloads</name>
   <parent>
     <groupId>com.dam.delta4j</groupId>
@@ -26,7 +26,7 @@
     <dependency>
       <groupId>com.dam.delta4j</groupId>
       <artifactId>delta-common</artifactId>
-      <version>1.14</version>
+      <version>1.15</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
